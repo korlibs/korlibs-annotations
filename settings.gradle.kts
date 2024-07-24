@@ -22,7 +22,7 @@ for (file in rootDir.listFiles()) {
     }
 }
 
-rootProject.name = "korlibs"
+rootProject.name = "${rootDir.name}-root"
 
 File(rootDir, "local.properties").also { localProperties ->
     if (localProperties.exists()) return@also
