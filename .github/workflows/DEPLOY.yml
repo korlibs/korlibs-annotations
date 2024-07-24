@@ -39,5 +39,5 @@ jobs:
       # To ensure we are fine before staging repository
       - { name: Publish Publications To Maven Local, run: ./gradlew --no-configuration-cache publishToMavenLocal }
       - { name: Start Maven Central Staging Repository, run: ./gradlew --no-configuration-cache startReleasingMavenCentral }
-      - { name: Publish Publications To Maven Repository, run: "./gradlew --no-configuration-cache publishAllPublicationsToMavenRepository" }
+      - { name: Publish Publications To Maven Repository, run: "./gradlew --no-configuration-cache --parallel --max-workers=32 publishAllPublicationsToMavenRepository" }
       - { name: Release to Maven Central, run: ./gradlew --no-configuration-cache releaseMavenCentral }
