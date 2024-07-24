@@ -660,18 +660,7 @@ open class Sonatype(
                             repositoryIds.remove(repositoryId)
                             continue@repo
                         }
-                        // Server error
-                        // @TODO: We should handle retrying on other operations too
-                        in 500..599 -> { // Sometimes  HTTP Error 502 Bad Gateway
-                            e.printStackTrace()
-                            println("Retrying...")
-                            Thread.sleep(15_000L)
-                            retryCount++
-                            continue@repo
-                        }
-                        else -> {
-                            throw e
-                        }
+                        else -> throw e
                     }
                 }
                 when {
@@ -711,7 +700,7 @@ open class Sonatype(
     private val client get() = SimpleHttpClient(user, pass)
 
     fun getRepositoryState(repositoryId: String): RepoState {
-        val info = client.request("${BASE}/repository/$repositoryId")
+        val info = client.requestWithRetry("${BASE}/repository/$repositoryId")
         //println("info: ${info.toStringPretty()}")
         return RepoState(
             repositoryId = repositoryId,
@@ -722,7 +711,7 @@ open class Sonatype(
     }
 
     fun getRepositoryActivity(repositoryId: String): String {
-        val info = client.request("${BASE}/repository/$repositoryId/activity")
+        val info = client.requestWithRetry("${BASE}/repository/$repositoryId/activity")
         //println("info: ${info.toStringPretty()}")
         return info.toStringPretty()
     }
@@ -748,25 +737,25 @@ open class Sonatype(
     }
 
     fun repositoryClose(repositoryId: String) {
-        client.request("${BASE}/bulk/close", getDataMapForRepository(repositoryId))
+        client.requestWithRetry("${BASE}/bulk/close", getDataMapForRepository(repositoryId))
     }
 
     fun repositoryPromote(repositoryId: String) {
-        client.request("${BASE}/bulk/promote", getDataMapForRepository(repositoryId))
+        client.requestWithRetry("${BASE}/bulk/promote", getDataMapForRepository(repositoryId))
     }
 
     fun repositoryDrop(repositoryId: String) {
-        client.request("${BASE}/bulk/drop", getDataMapForRepository(repositoryId))
+        client.requestWithRetry("${BASE}/bulk/drop", getDataMapForRepository(repositoryId))
     }
 
     fun findProfileRepositories(profileId: String): List<String> {
-        return client.request("${BASE}/profile_repositories")["data"].list
+        return client.requestWithRetry("${BASE}/profile_repositories")["data"].list
             .filter { it["profileId"].asString == profileId }
             .map { it["repositoryId"].asString }
     }
 
     fun findProfileIdByGroupId(groupId: String): String {
-        val profiles = client.request("$BASE/profiles")["data"].list
+        val profiles = client.requestWithRetry("$BASE/profiles")["data"].list
         return profiles
             .filter { groupId.startsWith(it["name"].asString) }
             .map { it["id"].asString }
@@ -774,7 +763,7 @@ open class Sonatype(
     }
 
     fun startStagedRepository(profileId: String): String {
-        return client.request("${BASE}/profiles/$profileId/start", mapOf(
+        return client.requestWithRetry("${BASE}/profiles/$profileId/start", mapOf(
             "data" to mapOf("description" to "Explicitly created by easy-kotlin-mpp-gradle-plugin")
         ))["data"]["stagedRepositoryId"].asString
     }
@@ -788,6 +777,29 @@ open class SimpleHttpClient(
     val user: String? = null,
     val pass: String? = null
 ) {
+    open fun requestWithRetry(url: String, body: Any? = null, nretries: Int = 5): JsonElement {
+        var retryCount = 0
+        while (true) {
+            try {
+                return request(url, body)
+            } catch (e: SimpleHttpException) {
+                when (e.responseCode) {
+                    in 500..599 -> { // Sometimes  HTTP Error 502 Bad Gateway
+                        e.printStackTrace()
+                        retryCount++
+                        if (retryCount >= nretries) throw RuntimeException("Couldn't access $url after $nretries retries :: ${e.responseCode} : ${e.message}", e)
+                        println("Retrying... retryCount=$retryCount/$nretries")
+                        Thread.sleep(15_000L)
+                        continue
+                    }
+                    else -> {
+                        throw e
+                    }
+                }
+            }
+        }
+    }
+
     open fun request(url: String, body: Any? = null): JsonElement {
         val post = (URL(url).openConnection()) as HttpURLConnection
         post.connectTimeout = 300 * 1000 // 300 seconds // 5 minutes
