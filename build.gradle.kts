@@ -292,19 +292,19 @@ class SonatypeProps(val project: Project) {
     }
 
     open class ReleaseMavenCentralTask : DefaultTask() {
-        //val groupId = "com.soywiz.korge" ?: rootProject.group.toString()
-        @Input
-        var groupId = "com.soywiz.korge"
-
         @Input
         @Optional
         var sonatype: Sonatype? = null
+
+        @Input
+        @Optional
+        var repositoryId: String? = null
 
         @TaskAction
         fun action() {
             //if (!sonatype.releaseGroupId(rootProject.group.toString())) {
             try {
-                if (!sonatype!!.releaseGroupId(groupId)) {
+                if (!sonatype!!.releaseRepositoryID(repositoryId)) {
                     error("Can't promote artifacts. Check log for details")
                 }
             } finally {
@@ -321,6 +321,7 @@ class SonatypeProps(val project: Project) {
             }
             rootProject.tasks.create<ReleaseMavenCentralTask>("releaseMavenCentral") {
                 this.sonatype = this@SonatypeProps.sonatype
+                this.repositoryId = this@SonatypeProps.stagedRepositoryId
             }
         }
 
@@ -636,11 +637,22 @@ open class Sonatype(
         println("Trying to release groupId=$groupId")
         val profileId = findProfileIdByGroupId(groupId)
         println("Determined profileId=$profileId")
-        val repositoryIds = findProfileRepositories(profileId).toMutableList()
+        val repositoryIds = findProfileRepositories(profileId)
         if (repositoryIds.isEmpty()) {
             println("Can't find any repositories for profileId=$profileId for groupId=$groupId. Artifacts weren't upload?")
             return false
         }
+        return releaseRepositoryIDs(repositoryIds)
+    }
+
+    fun releaseRepositoryID(repositoryId: String?): Boolean {
+        val repositoryIds = listOfNotNull(repositoryId)
+        if (repositoryIds.isEmpty()) return false
+        return releaseRepositoryIDs(repositoryIds)
+    }
+
+    fun releaseRepositoryIDs(repositoryIds: List<String>): Boolean {
+        val repositoryIds = repositoryIds.toMutableList()
         val totalRepositories = repositoryIds.size
         var promoted = 0
         var stepCount = 0

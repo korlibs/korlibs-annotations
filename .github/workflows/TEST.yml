@@ -20,7 +20,7 @@ env:
 jobs:
   test:
     strategy:
-      fail-fast: false # Once working, comment this
+      fail-fast: true # Once working, comment this
       matrix:
         include:
           - { outputKey: testWindows, os: windows-latest, testTask: mingwX64Test, enableKotlinNative: true }
