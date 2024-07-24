@@ -6,6 +6,7 @@ import org.gradle.api.internal.tasks.testing.*
 import org.gradle.api.tasks.testing.logging.*
 import org.gradle.jvm.tasks.Jar
 import org.gradle.plugins.signing.signatory.internal.pgp.*
+import org.jetbrains.dokka.gradle.*
 import org.jetbrains.kotlin.gradle.dsl.*
 import org.jetbrains.kotlin.gradle.plugin.*
 import org.jetbrains.kotlin.gradle.targets.js.ir.*
@@ -16,6 +17,7 @@ import java.util.concurrent.*
 plugins {
     kotlin("multiplatform") version "2.0.0"
     id("com.android.library") version "8.2.2"
+    id("org.jetbrains.dokka") version "1.9.20"
     `maven-publish`
     signing
 }
@@ -789,7 +791,7 @@ open class SimpleHttpClient(
     val user: String? = null,
     val pass: String? = null
 ) {
-    open fun requestWithRetry(url: String, body: Any? = null, nretries: Int = 5): JsonElement {
+    open fun requestWithRetry(url: String, body: Any? = null, nretries: Int = 15): JsonElement {
         var retryCount = 0
         while (true) {
             try {
@@ -801,7 +803,7 @@ open class SimpleHttpClient(
                         retryCount++
                         if (retryCount >= nretries) throw RuntimeException("Couldn't access $url after $nretries retries :: ${e.responseCode} : ${e.message}", e)
                         println("Retrying... retryCount=$retryCount/$nretries")
-                        Thread.sleep(15_000L)
+                        Thread.sleep(15_000L + (retryCount * 5_000L))
                         continue
                     }
                     else -> {
@@ -1115,5 +1117,16 @@ allprojects {
                 }
             }
         }
+    }
+}
+
+subprojects {
+    plugins.apply("org.jetbrains.dokka")
+}
+
+allprojects {
+    tasks.withType(AbstractDokkaTask::class.java).configureEach {
+        //println("DOKKA=$it")
+        offlineMode.set(true)
     }
 }

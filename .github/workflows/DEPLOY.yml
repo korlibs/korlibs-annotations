@@ -38,7 +38,7 @@ jobs:
 
   publish:
     strategy:
-      fail-fast: true # Once working, comment this
+      fail-fast: false
       matrix:
         include:
           - { os: ubuntu-latest, publishTask: "publishLinuxX64PublicationToMavenLocal publishLinuxArm64PublicationToMavenLocal" }
