@@ -46,10 +46,10 @@ jobs:
       - name: Replace MavenLocal with MavenLocal
         id: replace
         run: |
-          publishTaskLocal=$(echo "${{ matrix.publishTask }}")
-          publishTaskRepository=$(echo "${{ matrix.publishTask }}" | sed 's/MavenLocal/MavenRepository/g')
-          echo "publishTaskLocal='${publishTaskLocal}'" >> $GITHUB_ENV
-          echo "publishTaskRepository='${publishTaskRepository}'" >> $GITHUB_ENV
+          publishTaskLocal=$(echo "${{ matrix.publishTask }}" | tr -d '\n')
+          publishTaskRepository=$(echo "${{ matrix.publishTask }}" | sed 's/MavenLocal/MavenRepository/g' | tr -d '\n')
+          echo "publishTaskLocal=${publishTaskLocal}" >> $GITHUB_ENV
+          echo "publishTaskRepository=${publishTaskRepository}" >> $GITHUB_ENV
       - { name: Print publishTaskLocal, run: "echo 'publishTaskLocal: ${{ env.publishTaskLocal }}'" }
       - { name: Print publishTaskRepository, run: "echo 'publishTaskRepository: ${{ env.publishTaskRepository }}'" }
       - { name: Checkout, uses: actions/checkout@v3 }
