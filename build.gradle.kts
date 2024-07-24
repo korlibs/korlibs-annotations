@@ -1081,15 +1081,13 @@ allprojects {
     afterEvaluate {
         afterEvaluate {
             afterEvaluate {
-                if (JavaVersion.current() > JavaVersion.VERSION_1_8){
-                    tasks.withType(org.gradle.api.tasks.testing.Test::class) {
-                        //println("TEST-TASK: $this")
-                        jvmArgs(
-                            "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-                            //"--add-opens", "java.base/jdk.incubator.foreign=ALL-UNNAMED",
-                            "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
-                        )
-                    }
+                tasks.withType(org.gradle.api.tasks.testing.Test::class) {
+                    //println("TEST-TASK: $this")
+                    jvmArgs(
+                        "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+                        //"--add-opens", "java.base/jdk.incubator.foreign=ALL-UNNAMED",
+                        "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
+                    )
                 }
             }
         }
