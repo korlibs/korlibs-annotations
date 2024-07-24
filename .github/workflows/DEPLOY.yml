@@ -38,7 +38,7 @@ jobs:
           - { os: ubuntu-latest, publishTask: "publishJsPublicationToMavenLocal publishWasmJsPublicationToMavenLocal" }
           - { os: macos-latest, publishTask: "publishMacosX64PublicationToMavenLocal publishMacosArm64PublicationToMavenLocal" }
           - { os: macos-latest, publishTask: "publishTvosArm64PublicationToMavenLocal publishTvosSimulatorArm64PublicationToMavenLocal publishTvosX64PublicationToMavenLocal" }
-          - { os: macos-latest, publishTask: "publishIosArm64PublicationToMavenLocal publishIosSimulatorArm64PublicationToMavenLocal publishIosX64Arm64PublicationToMavenLocal" }
+          - { os: macos-latest, publishTask: "publishIosArm64PublicationToMavenLocal publishIosSimulatorArm64PublicationToMavenLocal publishIosX64PublicationToMavenLocal" }
           - { os: macos-latest, publishTask: "publishWatchosArm64PublicationToMavenLocal publishWatchosArm32PublicationToMavenLocal publishWatchosDeviceArm64PublicationToMavenLocal publishWatchosSimulatorArm64PublicationToMavenLocal" }
     timeout-minutes: 300
     runs-on: ${{ matrix.os }}
@@ -47,15 +47,17 @@ jobs:
         id: replace
         run: |
           publishTaskLocal=$(echo "${{ matrix.publishTask }}")
-          publishTaskRepository=$(echo "${{ matrix.publishTask }}" | sed 's/MavenLocal/MavenRepository/')
-          echo "publishTaskLocal=${publishTaskLocal}" >> $GITHUB_ENV
-          echo "publishTaskRepository=${publishTaskRepository}" >> $GITHUB_ENV
+          publishTaskRepository=$(echo "${{ matrix.publishTask }}" | sed 's/MavenLocal/MavenRepository/g')
+          echo "publishTaskLocal='${publishTaskLocal}'" >> $GITHUB_ENV
+          echo "publishTaskRepository='${publishTaskRepository}'" >> $GITHUB_ENV
+      - { name: Print publishTaskLocal, run: "echo 'publishTaskLocal: ${{ env.publishTaskLocal }}'" }
+      - { name: Print publishTaskRepository, run: "echo 'publishTaskRepository: ${{ env.publishTaskRepository }}'" }
       - { name: Checkout, uses: actions/checkout@v3 }
       - { name: Use Node.js 20.x, uses: actions/setup-node@v3, with: { node-version: 20.x } }
       - { name: Set up JDK, uses: actions/setup-java@v3, with: { distribution: "${{ env.JAVA_DISTRIBUTION }}", java-version: "${{ env.JAVA_VERSION }}" } }
       - { name: Prepare Gradle, uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 } # https://github.com/gradle/actions/releases/tag/v3.5.0
       - { name: Initialize Gradle, run: ./gradlew --no-configuration-cache }
       - { name: Publish Publications To Maven Local, run: "./gradlew --no-configuration-cache --parallel ${{ env.publishTaskLocal }}" }
-      - { name: Start Maven Central Staging Repository, run: ./gradlew --no-configuration-cache startReleasingMavenCentral }
-      - { name: Publish Publications To Maven Repository, run: "./gradlew --no-configuration-cache --parallel ${{ env.publishTaskRepository }}" }
-      - { name: Release to Maven Central, run: ./gradlew --no-configuration-cache releaseMavenCentral }
+      #- { name: Start Maven Central Staging Repository, run: ./gradlew --no-configuration-cache startReleasingMavenCentral }
+      #- { name: Publish Publications To Maven Repository, run: "./gradlew --no-configuration-cache --parallel ${{ env.publishTaskRepository }}" }
+      #- { name: Release to Maven Central, run: ./gradlew --no-configuration-cache releaseMavenCentral }
