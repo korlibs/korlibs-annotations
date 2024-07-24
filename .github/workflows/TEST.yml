@@ -42,7 +42,7 @@ jobs:
       - { name: Setup Deno, uses: denoland/setup-deno@v1, with: { deno-version: "1.44.4" } }
       - { name: Replace gradle wrapper, run: "sed 's/-all/-bin/g' gradle/wrapper/gradle-wrapper.properties > gradle/wrapper/gradle-wrapper.properties.bak; cp gradle/wrapper/gradle-wrapper.properties.bak gradle/wrapper/gradle-wrapper.properties" }
       - { name: Set up JDK, uses: actions/setup-java@v4, with: { distribution: "${{ env.JAVA_DISTRIBUTION }}", java-version: "${{ env.JAVA_VERSION }}" } }
-      - { name: Prepare Gradle, uses: gradle/actions/setup-gradle@417ae3ccd767c252f5661f1ace9f835f9654f2b5 } # v3.1.0
+      - { name: Prepare Gradle, uses: gradle/actions/setup-gradle@d9c87d481d55275bb5441eef3fe0e46805f9ef70 } # https://github.com/gradle/actions/releases/tag/v3.5.0
       - { name: Start gradle, run: ./gradlew }
       - { if: "${{ matrix.precompileTask }}", name: "Building ${{ matrix.precompileTask }} classes", run: "./gradlew --no-configuration-cache --stacktrace ${{ matrix.precompileTask }}" }
       - { if: "${{ matrix.testTask }}", name: "Run ${{ matrix.testTask }} tests", run: "./gradlew --no-configuration-cache ${{ matrix.testTask }}" }
