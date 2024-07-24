@@ -505,9 +505,9 @@ subprojects {
                             password = sonatypeProps.sonatype.pass
                         }
                         url = when {
-                            version.toString().contains("-SNAPSHOT") -> uri("https://oss.sonatype.org/content/repositories/snapshots/")
-                            sonatypeProps.stagedRepositoryId != null -> uri("https://oss.sonatype.org/service/local/staging/deployByRepositoryId/${sonatypeProps.stagedRepositoryId}/")
-                            else -> uri("https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+                            version.toString().contains("-SNAPSHOT") -> uri("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+                            sonatypeProps.stagedRepositoryId != null -> uri("https://s01.oss.sonatype.org/service/local/staging/deployByRepositoryId/${sonatypeProps.stagedRepositoryId}/")
+                            else -> uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
                         }
                         doOnce("showDeployTo") { logger.info("DEPLOY mavenRepository: $url") }
                     }
@@ -613,7 +613,7 @@ open class Sonatype(
     val BASE: String = DEFAULT_BASE
 ) {
     companion object {
-        val DEFAULT_BASE = "https://oss.sonatype.org/service/local/staging"
+        val DEFAULT_BASE = "https://s01.oss.sonatype.org/service/local/staging"
         private val BASE = DEFAULT_BASE
 
         //fun fromGlobalConfig(): Sonatype {
