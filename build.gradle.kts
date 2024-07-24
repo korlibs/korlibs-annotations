@@ -1077,76 +1077,19 @@ class MicroAmper(val project: Project) {
     }
 }
 
-tasks {
-    subprojects {
-        afterEvaluate {
-            val copyArtifactsToDirectory = tasks.create("copyArtifactsToDirectory", Task::class) {
-                //dependsOn("publishToMavenLocal")
-            }
-
-            val base = rootProject.layout.buildDirectory.dir("artifacts")
-            for ((index, pub) in publishing.publications.filterIsInstance<MavenPublication>().withIndex()) {
-                //println(pub.artifacts.toList())
-                val basePath = pub.groupId.replace(".", "/") + "/" + pub.artifactId + "/" + pub.version
-                val baseDir = File(base.get().asFile, basePath)
-                val m2Dir = File(File(System.getProperty("user.home"), ".m2/repository"), basePath)
-
-                val afterTask = tasks.create("copyArtifactsToDirectory$index", Copy::class).also {
-                    it.from(m2Dir)
-                    it.into(baseDir)
-                }
-                afterTask.dependsOn("publishToMavenLocal")
-                copyArtifactsToDirectory.dependsOn(afterTask)
-                //println("TASK: afterTask=$afterTask")
-            }
-        }
-    }
-
-    val generateArtifactsZip by registering(Zip::class) {
-        subprojects {
-            dependsOn("${this.path}:copyArtifactsToDirectory")
-        }
-        from(rootProject.layout.buildDirectory.dir("artifacts"))
-        archiveFileName = "korlibs-${REAL_VERSION}.zip"
-        destinationDirectory = rootProject.layout.buildDirectory
-    }
-
-    val generateArtifactsTar by registering(Tar::class) {
-        subprojects {
-            dependsOn("${this.path}:copyArtifactsToDirectory")
-        }
-        from(rootProject.layout.buildDirectory.dir("artifacts"))
-        //compression = Compression.GZIP
-        //into(rootProject.layout.buildDirectory)
-        archiveFileName = "korlibs-${REAL_VERSION}.tar"
-        destinationDirectory = rootProject.layout.buildDirectory
-    }
-
-    // winget install zstd
-    val generateArtifactsTarZstd by registering(Exec::class) {
-        val rootFile = rootProject.layout.buildDirectory.asFile.get()
-        dependsOn(generateArtifactsTar)
-        commandLine(
-            "zstd", "-z",
-            //"--ultra", "-22",
-            "-17",
-            "-f", File(rootFile, "korlibs-${REAL_VERSION}.tar").absolutePath,
-            "-o", File(rootFile, "korlibs-${REAL_VERSION}.tar.zstd").absolutePath
-        )
-    }
-}
-
 allprojects {
     afterEvaluate {
         afterEvaluate {
             afterEvaluate {
-                tasks.withType(org.gradle.api.tasks.testing.Test::class) {
-                    //println("TEST-TASK: $this")
-                    jvmArgs(
-                        "--add-opens", "java.base/java.nio=ALL-UNNAMED",
-                        //"--add-opens", "java.base/jdk.incubator.foreign=ALL-UNNAMED",
-                        "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
-                    )
+                if (JavaVersion.current() > JavaVersion.VERSION_1_8){
+                    tasks.withType(org.gradle.api.tasks.testing.Test::class) {
+                        //println("TEST-TASK: $this")
+                        jvmArgs(
+                            "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+                            //"--add-opens", "java.base/jdk.incubator.foreign=ALL-UNNAMED",
+                            "--add-opens", "java.base/sun.nio.ch=ALL-UNNAMED",
+                        )
+                    }
                 }
             }
         }
