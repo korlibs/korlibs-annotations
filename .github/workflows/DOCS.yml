@@ -24,7 +24,7 @@ concurrency:
 env:
   CI: true
   FORCED_VERSION: ${{ inputs.forced_version || github.ref }}
-  JAVA_VERSION: 17
+  JAVA_VERSION: 8
   JAVA_DISTRIBUTION: zulu
 
 jobs:

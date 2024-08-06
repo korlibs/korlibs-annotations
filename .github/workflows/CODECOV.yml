@@ -14,7 +14,7 @@ concurrency:
 env:
   CI: true
 
-  JAVA_VERSION: 17
+  JAVA_VERSION: 8
   JAVA_DISTRIBUTION: zulu
 
 jobs:
