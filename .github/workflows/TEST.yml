@@ -26,8 +26,8 @@ concurrency:
 env:
   CI: true
 
-  JAVA_VERSION: 17
-  JAVA_DISTRIBUTION: temurin
+  JAVA_VERSION: 21
+  JAVA_DISTRIBUTION: zulu
 
 jobs:
   test:
@@ -36,9 +36,9 @@ jobs:
       matrix:
         include:
           - { outputKey: testMacosIos, os: macos-latest, testTask: jvmTest macosArm64Test iosSimulatorArm64Test, buildTasks: publishMacosX64PublicationToMavenLocal }
-          - { outputKey: testJsAndroid, os: ubuntu-latest, testTask: "wasmBrowserTest", buildTasks: "jsBrowserTest jsDenoTest", enableAndroid: true }
+          - { outputKey: testJsAndroid, os: ubuntu-latest, testTask: "wasmBrowserTest", buildTasks: "jsBrowserTest jsDenoTest", upgradeYarnLock: true, enableAndroid: true }
           - { outputKey: testLinux, os: ubuntu-latest, testTask: apiCheck jvmTest linuxX64Test, precompileTask: compileTestKotlinJvm, enableCodecov: true, e2e: true }
-          - { outputKey: testWindows, os: windows-latest, testTask: jvmTest mingwX64Test jsDenoTest, precompileTask: compileTestKotlinJvm }
+          - { outputKey: testWindows, os: windows-latest, testTask: jvmTest mingwX64Test jsDenoTest, precompileTask: compileTestKotlinJvm, upgradeYarnLock: true }
     #if: ${{ needs.changes.outputs[matrix.outputKey] == 'true' }}
     timeout-minutes: 60
     runs-on: ${{ matrix.os }}
@@ -50,6 +50,7 @@ jobs:
       #- { name: Prepare Gradle, uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 } # https://github.com/gradle/actions/releases/tag/v4.0.0
       - { name: "Cache Kotlin/Native .konan folder", uses: actions/cache@v4, with: { path: "~/.konan", key: "${{ runner.os }}-konan", restore-keys: "${{ runner.os }}-konan" } }
       - { name: Start gradle, run: ./gradlew }
+      - { if: "${{ matrix.upgradeYarnLock }}", name: "Upgrade yarn lock", run: "./gradlew kotlinUpgradeYarnLock" }
       - { if: "${{ matrix.precompileTask }}", name: "Building ${{ matrix.precompileTask }} classes", run: "./gradlew --stacktrace ${{ matrix.precompileTask }}" }
       - { if: "${{ matrix.testTask }}", name: "Run ${{ matrix.testTask }} tests", run: "./gradlew ${{ matrix.testTask }}" }
       - { if: "${{ matrix.buildTasks }}", name: "Run ${{ matrix.buildTasks }}", run: "./gradlew ${{ matrix.buildTasks }}" }
